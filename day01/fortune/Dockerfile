@@ -24,5 +24,8 @@ ENV APP_PORT=3000
 
 EXPOSE ${APP_PORT}
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+   CMD curl -s -f http://localhost:${APP_PORT}/health > /dev/null || exit 1
+
 # shell form
 ENTRYPOINT node /app/main.js

@@ -1,0 +1,42 @@
+# create a volume
+# docker volume create db-vol
+volumes: 
+  db-vol:
+
+# create a network
+# docker network create mynet
+networks:
+  mynet:
+
+# create containers
+services:
+  # docker run -d --network=mynet --name=mydb stackupiss/northwind-db:v1
+  mydb:
+    image: stackupiss/northwind-db:v1
+    build:
+      context: northwind-db
+      dockerfile: Dockerfile
+    networks:
+    - mynet
+    volumes:
+    - type: volume
+      source: db-vol 
+      target: /var/lib/mysql
+
+  # docker run -d -p 8080:3000 --name=myapp --network=mynet -e ... stackupiss/northwind-app:v1
+  myapp:
+    image: stackupiss/northwind-app:v1
+    build:
+      context: northwind-app
+    networks:
+    - mynet
+    environment:
+    - DB_HOST=mydb
+    - DB_USER=root
+    - DB_PASSWORD=changeit
+    ports:
+    - 8080:3000
+    depends_on:
+    - mydb
+
+      
