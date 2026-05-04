@@ -24,5 +24,6 @@ ENV APP_PORT=3000
 
 EXPOSE ${APP_PORT}
 
-# shell form
-ENTRYPOINT node /app/main.js
+# exec form
+ENTRYPOINT [ "/usr/local/bin/node", "./main.js" ]
+CMD [ "--port", "3000" ]
