@@ -5,10 +5,11 @@ metadata:
   name: fortune-svc 
   namespace: myns
 spec:
+  # options: ClusterIP, NodePort
   type: ClusterIP
   selector: 
     name: fortune 
     env: prod
   ports:
-  - port: 5000 # service port
+  - port: 80 # service port
     targetPort: 3000 # containerPort

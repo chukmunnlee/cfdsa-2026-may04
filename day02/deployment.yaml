@@ -13,6 +13,11 @@ spec:
     matchLabels:
       name: fortune 
       env: prod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: 
+      maxSurge: 20%
+      maxUnavailable: 0%
   template:
     metadata:
       name: my-fortune
@@ -23,6 +28,7 @@ spec:
       containers:
       - name: fortune-container
         image: chukmunnlee/myfortune:v1.2
+        #image: chukmunnlee/countingbook:v1.1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
