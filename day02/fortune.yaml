@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myns
+  labels:
+    env: prod
+    contact: admin
+
+---
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: my-fortune
+  namespace: myns
+  labels: 
+    name: fortune 
+    env: prod
+spec:
+  containers:
+  - name: fortune-container
+    image: chukmunnlee/myfortune:v1.2
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 3000

@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1 
+kind: Deployment 
+metadata: 
+  name: fortune-deploy 
+  namespace: myns
+  labels:
+    app: fortune 
+    env: prod
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      name: fortune 
+      env: prod
+  template:
+    metadata:
+      name: my-fortune
+      labels: 
+        name: fortune 
+        env: prod
+    spec:
+      containers:
+      - name: fortune-container
+        image: chukmunnlee/myfortune:v1.2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
