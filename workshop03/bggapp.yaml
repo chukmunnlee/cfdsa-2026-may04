@@ -1,0 +1,115 @@
+--- 
+apiVersion: apps/v1 
+kind: Deployment 
+metadata: 
+  name: bggapp-deploy
+  namespace: workshop03
+spec: 
+  replicas: 3
+  selector: 
+    matchLabels: 
+      app: bgg 
+      name: bggapp-po
+  template:
+    metadata:
+      labels:
+        app: bgg 
+        name: bggapp-po
+    spec:
+      containers:
+      - name: bggapp-container 
+        image: chukmunnlee/bgg-app:nov-2025
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: bgg-secret
+        - configMapRef:
+            name: bgg-cm
+        ports: 
+        - name: app-port 
+          containerPort: 5000
+        resources:
+          requests: 
+            cpu: 50m
+            memory: 48Mi
+          limits: 
+            cpu: 50m
+            memory: 48Mi
+
+---
+apiVersion: v1 
+kind: Service
+metadata:
+  name: bggapp-svc
+  namespace: workshop03
+spec:
+  type: ClusterIP
+  selector:
+    app: bgg 
+    name: bggapp-po
+  ports:
+  - port: 5000
+    targetPort: app-port
+
+--- 
+apiVersion: gateway.networking.k8s.io/v1 
+kind: HTTPRoute 
+metadata: 
+  name: bggapp-httproute 
+  namespace: workshop03
+spec: 
+  hostnames:
+  - bgg.167.99.29.152.nip.io 
+  parentRefs:
+  - name: cfdsa-gtw 
+    namespace: cfdsa 
+    port: 80
+  rules:
+  - matches: 
+    - path: 
+        type: PathPrefix 
+        value: /
+    backendRefs: 
+    - name: bggapp-svc 
+      port: 5000
+
+--- 
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: 
+  name: bggapp-hpa 
+  namespace: workshop03
+spec:
+  minReplicas: 1
+  maxReplicas: 8
+  scaleTargetRef:
+    apiVersion: apps/v1 
+    kind: Deployment 
+    name: bggapp-deploy
+  metrics:
+  - type: Resource 
+    resource:
+      name: memory 
+      target:
+        type: Utilization 
+        averageUtilization: 50
+  - type: Resource 
+    resource:
+      name: cpu 
+      target:
+        type: Utilization 
+        averageUtilization: 50
+
+
+
+
+
+
+
+
+
+
+
+
+
+
