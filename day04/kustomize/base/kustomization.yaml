@@ -1,0 +1,9 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# list the files that can be customized
+resources:
+- ./api-httproute-domain.yaml
+- ./config.yaml
+- ./v1_api.yaml
