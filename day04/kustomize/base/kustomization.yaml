@@ -6,4 +6,5 @@ kind: Kustomization
 resources:
 - ./api-httproute-domain.yaml
 - ./config.yaml
+- ./namespace.yaml
 - ./v1_api.yaml

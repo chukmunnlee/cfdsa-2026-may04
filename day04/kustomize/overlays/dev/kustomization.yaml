@@ -23,3 +23,55 @@ replicas:
 images:
 - name: chukmunnlee/fake-api 
   newTag: v2
+
+configMapGenerator:
+- name: bgg-cm 
+  namespace: day04
+  behavior: merge
+  literals:
+  - BGG_DB_USER=fred
+
+secretGenerator:
+- name: bgg-secret
+  namespace: day04
+  behavior: create
+  literals:
+  - BGG_DB_PASSWORD=abcd1234 
+
+patches:
+- target:
+    group: apps 
+    version: v1 
+    kind: Deployment 
+    name: api-v1-deploy 
+    namespace: day04
+  path: resource-patch.yaml
+
+replacements:
+- source:
+    kind: Service 
+    name: api-v1-svc 
+    namespace: day04
+    # /metadata/name
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: HTTPRoute
+      name: api-v1-httproute
+      namespace: day04
+    fieldPaths:
+    - spec.rules.0.backendRefs.0.name
+- source:
+    kind: Service 
+    name: api-v1-svc 
+    namespace: day04
+    # /metadata/namespace
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: HTTPRoute
+      name: api-v1-httproute
+      namespace: day04
+    fieldPaths:
+    - spec.rules.0.backendRefs.0.namespace
+      

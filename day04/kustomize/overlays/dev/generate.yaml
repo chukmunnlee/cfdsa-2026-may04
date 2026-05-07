@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    contact: chuk
+    env: dev
+  name: dev
+---
+apiVersion: v1
+data:
+  BGG_DB_HOST: bggdb-svc.workshop03.svc.cluster.local
+  BGG_DB_USER: fred
+  BGG_PORT: "5000"
+kind: ConfigMap
+metadata:
+  labels:
+    contact: chuk
+    env: dev
+  name: dev-bgg-cm
+  namespace: dev
+---
+apiVersion: v1
+data:
+  BGG_DB_PASSWORD: YWJjZDEyMzQ=
+kind: Secret
+metadata:
+  labels:
+    contact: chuk
+    env: dev
+  name: dev-bgg-secret-h8m9t72t52
+  namespace: dev
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    contact: chuk
+    env: dev
+  name: dev-api-v1-svc
+  namespace: dev
+spec:
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+  selector:
+    app: api
+    contact: chuk
+    env: dev
+    name: api-v1-po
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    contact: chuk
+    env: dev
+  name: dev-api-v1-deploy
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+      contact: chuk
+      env: dev
+      name: api-v1-po
+  template:
+    metadata:
+      labels:
+        app: api
+        contact: chuk
+        env: dev
+        name: api-v1-po
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: dev-bgg-cm
+        - secretRef:
+            name: dev-bgg-secret-h8m9t72t52
+        image: chukmunnlee/fake-api:v2
+        imagePullPolicy: IfNotPresent
+        name: api-container
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    contact: chuk
+    env: dev
+  name: dev-api-v1-httproute
+  namespace: dev
+spec:
+  hostnames:
+  - v1.167.99.29.152.nip.io
+  parentRefs:
+  - name: cfdsa-gtw
+    namespace: cfdsa
+    port: 80
+  rules:
+  - backendRefs:
+    - name: dev-api-v1-svc
+      namespace: dev
+      port: 3000
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

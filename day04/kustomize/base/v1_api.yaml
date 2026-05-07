@@ -23,6 +23,12 @@ spec:
         ports:
         - name: http
           containerPort: 3000
+        envFrom:
+        - configMapRef: 
+            name: bgg-cm
+        - secretRef: 
+            name: bgg-secret
+        # /spec/template/spec/containers/0/resources
 
 ---
 apiVersion: v1
