@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fortune-hsvc
+  namespace: day04
+spec:
+  clusterIP: None
+  selector:
+    name: fortune-sts
+    env: prod
+  ports:
+  - port: 3000
+    targetPort: 3000
+
+---
+apiVersion: apps/v1 
+kind: StatefulSet
+metadata:
+  name: fortune-sts
+  namespace: day04
+spec:
+  serviceName: fortune-hsvc
+  replicas: 5
+  selector:
+    matchLabels:
+      name: fortune-sts
+      env: prod
+  template:
+    metadata:
+      name: my-fortune
+      labels: 
+        name: fortune-sts
+        env: prod
+    spec:
+      containers:
+      - name: fortune-container
+        image: chukmunnlee/myfortune:v1.2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000

@@ -1,0 +1,136 @@
+---
+apiVersion: v1 
+kind: Service
+metadata:
+  name: rustfs-hsvc
+  namespace: workshop04
+spec:
+  clusterIP: None
+  selector:
+    app: rustfs
+    name: rustfs-po
+  publishNotReadyAddresses: true 
+  ports:
+  - name: data 
+    port: 9000
+    targetPort: 9000
+  - name: ui 
+    port: 9001
+    targetPort: 9001
+
+---
+apiVersion: v1 
+kind: Service
+metadata:
+  name: rustfs-svc
+  namespace: workshop04
+spec:
+  type: ClusterIP
+  selector:
+    app: rustfs
+    name: rustfs-po
+  ports:
+  - name: data 
+    port: 9000
+    targetPort: 9000
+  - name: ui 
+    port: 9001
+    targetPort: 9001
+
+--- 
+apiVersion: apps/v1 
+kind: StatefulSet 
+metadata: 
+  name: rustfs-sts 
+  namespace: workshop04 
+spec: 
+  serviceName: rustfs-hsvc
+  replicas: 3
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: rustfs
+      name: rustfs-po
+  volumeClaimTemplates:
+  - metadata: 
+      name: data-vol
+    spec: 
+      accessModes: [ ReadWriteOncePod ]
+      storageClassName: do-block-storage
+      resources:
+        requests:
+          storage: 1Gi
+  template:
+    metadata: 
+      labels:
+        app: rustfs
+        name: rustfs-po
+    spec: 
+      # Set the group of the /data to 10001
+      securityContext:
+        fsGroup: 10001
+      containers:
+      - name: rustfs-container 
+        image: rustfs/rustfs
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef: 
+            name: rustfs-cm
+        - secretRef: 
+            name: rustfs-secret
+        ports: 
+        - name: data 
+          containerPort: 9000
+        - name: ui 
+          containerPort: 9001
+        volumeMounts:
+        - name: data-vol
+          mountPath: /data
+
+--- 
+apiVersion: gateway.networking.k8s.io/v1 
+kind: HTTPRoute 
+metadata: 
+  name: rustfs-httproute
+  namespace: workshop04
+spec: 
+  hostnames:
+  - data.167.99.29.152.nip.io
+  - console.167.99.29.152.nip.io
+  parentRefs:
+  - name: cfdsa-gtw 
+    namespace: cfdsa 
+    port: 80
+  rules: 
+  - matches: 
+    - path: 
+        type: PathPrefix 
+        value: /
+      headers:
+      - type: Exact
+        name: Host
+        value: data.167.99.29.152.nip.io
+    backendRefs:
+    - name: rustfs-svc 
+      namespace: workshop04 
+      port: 9000
+  - matches: 
+    - path: 
+        type: PathPrefix 
+        value: /
+      headers:
+      - type: Exact
+        name: Host
+        value: console.167.99.29.152.nip.io
+    backendRefs:
+    - name: rustfs-svc 
+      namespace: workshop04 
+      port: 9001
+  - matches: 
+    - path: 
+        type: PathPrefix 
+        value: /
+    backendRefs:
+    - name: rustfs-svc 
+      namespace: workshop04 
+      port: 9001
